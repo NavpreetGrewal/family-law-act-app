@@ -2,7 +2,6 @@ import logging
 import urllib
 import random
 import re
-import requests
 from string import ascii_lowercase, digits
 
 from rest_framework.request import Request
@@ -11,7 +10,6 @@ from django.urls.exceptions import NoReverseMatch
 from rest_framework import authentication
 from rest_framework import exceptions
 from rest_framework.reverse import reverse
-from requests.auth import HTTPBasicAuth
 
 from api.models.User import User
 from oidc_rp.models import OIDCUser
@@ -88,33 +86,6 @@ def generate_random_username(length=16, chars=ascii_lowercase+digits, split=4, d
         return generate_random_username(length=length, chars=chars, split=split, delimiter=delimiter)
     except User.DoesNotExist:
         return username
-
-
-def get_efiling_auth_token() -> {}:
-    client_id = settings.EFILING_CLIENT_ID
-    client_secret = settings.EFILING_CLIENT_SECRET
-    url = settings.EFILING_AUTH_URL
-    if not client_id:
-        LOGGER.error("eFiling service client id is not configured")
-        return
-    if not client_secret:
-        LOGGER.error("eFiling service client secret is not configured")
-        return
-    if not url:
-        LOGGER.error("eFiling authentication url is not configured")
-        return
-    payload = {"grant_type": "client_credentials"}
-    header = {"content-type": "application/x-www-form-urlencoded"}
-    try:
-        token_rs = requests.post(url, data=payload, auth=HTTPBasicAuth(client_id, client_secret), headers=header, verify=True)
-        if not token_rs.status_code == 200:
-            LOGGER.error("Error: Unexpected response %s", token_rs.text.encode('utf8'))
-            return
-        json_obj = token_rs.json()
-        return json_obj
-    except requests.exceptions.RequestException as e:
-        LOGGER.error("Error: {}".format(e))
-        return
 
 
 class DemoAuth(authentication.BaseAuthentication):
