@@ -55,11 +55,11 @@ def upload_documents(content: any, user_id: str, transaction_id: str, auth_token
     try:
         response = requests.post(url, data={}, headers=headers, files=files, verify=True)
         if not response.status_code // 100 == 2:
-            LOGGER.error("Error: Document upload failed! %s", response.text.encode('utf8'))
+            LOGGER.error("Error: Document upload failed! %s", response)
             return
 
         upload_res = response.json()
-        LOGGER.debug("Document upload complete!", upload_res)
+        LOGGER.debug("Document upload complete! %s", upload_res)
         return upload_res
     except requests.exceptions.RequestException as e:
         LOGGER.error("Error: {}".format(e))
