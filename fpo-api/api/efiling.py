@@ -104,33 +104,27 @@ def generate_efiling_url(content: any, user_id: str, transaction_id: str) -> {}:
                "X-User-Id": user_id
                }
     data = {
-            "navigation": {
-                "success": {
-                    "url": "http//somewhere.com"
-                },
-                "error": {
-                    "url": "http//somewhere.com"
-                },
-                "cancel": {
-                    "url": "http//somewhere.com"
-                }
+            "navigationUrls": {
+            "success": "http//somewhere.com",
+            "error": "http//somewhere.com",
+            "cancel": "http//somewhere.com"
             },
-            "clientApplication": {
-                "displayName": "Family Law Act Application"
-            },
+            "clientAppName": "my app",
             "filingPackage": {
                 "court": {
-                    "location": "1211",
-                    "level": "P",
-                    "courtClass": "F"
-                },
-                "documents": [
-                    {
-                        "name": "dummy.pdf",
-                        "type": "WNC"
-                    }
-                ]
-            }
+                "location": "1211",
+                "level": "P",
+                "courtClass": "F"
+            },
+            "documents": [
+                {
+                "name": "dummy.pdf",
+                "type": "WNC",
+                "description": "Without Notice Application Checklist",
+                "statutoryFeeAmount": 0
+                }
+            ]
+    }
         }
     try:
         response = requests.post(url, data=json.dumps(data), headers=headers, verify=True)
