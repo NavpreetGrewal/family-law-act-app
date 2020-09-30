@@ -43,10 +43,13 @@
                   </p>
                 </div>
                 <div class="col-md-6" style="padding: 0rem 1rem 0rem 2rem;">
-                  <p>2. Print Your Forms</p>
+                  <p>2. Print Your Forms OR Submit Your Application electronically</p>
                   <p>
                     Once you're done with the questions, you'll print your
-                    papers and file at your local court registry. That's it!
+                    papers and file at your local court registry. 
+                    OR
+                    Submit them through our eFiling system.
+                    That's it!
                   </p>
                 </div>
               </div>
@@ -98,7 +101,7 @@ export default {
 @import "src/styles/common";
 
 .background {
-  background-image: url("../../assets/landing-2.jpg");
+  // background-image: url("../../assets/landing-2.jpg");
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -136,16 +139,22 @@ export default {
   color: black;
   border: 2px solid rgba($gov-pale-grey, 0.3);
   margin-top: 2.5rem;
+  &:hover,
+  &:focus {
+    color: rgb(247, 214, 126);
+  }
   &:active {
     border: 2px solid rgba($gov-white, 0.8);
   }
 }
 .login-button {
-  color: $gov-white !important;
+  //color: $gov-white !important;
+  color: black;
   margin-top: 1rem;
+  border: 2px solid rgb(231, 231, 231);
   &:hover,
   &:focus {
-    color: $gov-white;
+    color: blue;
   }
   &:active {
     border: 2px solid rgba($gov-white, 0.8);
