@@ -199,7 +199,7 @@ OIDC_ENABLED = False
 OIDC_RP_PROVIDER_ENDPOINT = os.getenv(
     "OIDC_RP_PROVIDER_ENDPOINT",
     # FIXME no default here
-    "https://sso-dev.pathfinder.gov.bc.ca/auth/realms/tz0e228w",
+    "https://dev.oidc.gov.bc.ca/auth/realms/tz0e228w",
 )
 
 if OIDC_RP_PROVIDER_ENDPOINT:
@@ -225,7 +225,7 @@ if OIDC_RP_PROVIDER_ENDPOINT:
     OIDC_RP_AUTHENTICATION_REDIRECT_URI = (
         os.getenv("OIDC_RP_AUTHENTICATION_REDIRECT_URI", "/family-law-act/")
     )
-    OIDC_RP_KC_IDP_HINT = os.getenv("OIDC_RP_KC_IDP_HINT")
+    OIDC_RP_KC_IDP_HINT = os.getenv("OIDC_RP_KC_IDP_HINT", "bceid")
 
     DRF_AUTH_CLASS = (
         "oidc_rp.contrib.rest_framework.authentication.BearerTokenAuthentication"
@@ -241,11 +241,11 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     )
 }
-
 # DEMO_LOGIN = True
 EFILING_AUTH_URL = os.environ.get("EFILING_AUTH_URL", "")
 EFILING_CLIENT_ID = os.environ.get("EFILING_CLIENT_ID", "")
 EFILING_CLIENT_SECRET = os.environ.get("EFILING_CLIENT_SECRET", "")
+EFILING_BASE_URL = os.environ.get("EFILING_BASE_URL", "")
 
 ENCRYPTOR = Encryptor("DATA_SECURITY_KEY")
 FORCE_SCRIPT_NAME = os.getenv("WEB_BASE_HREF", "/family-law-act/")

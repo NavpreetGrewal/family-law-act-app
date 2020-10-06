@@ -25,11 +25,11 @@ import json
 from django.http import Http404
 from django.conf import settings
 from api.models.PreparedPdf import PreparedPdf
+import base64
 
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.template.loader import get_template
 from django.middleware.csrf import get_token
-from api.auth import get_efiling_auth_token
 from api.serializers import ApplicationListSerializer
 
 from rest_framework.views import APIView
@@ -106,7 +106,7 @@ class SurveyPdfView(generics.GenericAPIView):
             LOGGER.debug("No record found")
             return
 
-    def post(self, request, pk, new_pdf=None, name=None):
+    def post(self, request, pk=1, new_pdf=None, name=None):
         data = request.data
         uid = request.user.id
         application = get_app_queryset(pk, uid)
@@ -146,15 +146,6 @@ class SurveyPdfView(generics.GenericAPIView):
         response.write(pdf_content)
 
         return response
-
-
-class SubmitFormView(generics.GenericAPIView):
-    def get(self, request):
-        token_res = get_efiling_auth_token()
-        if token_res:
-            LOGGER.debug("Token response is %s", token_res['access_token'])
-            return Response({'Token': True})
-        return Response({'Token': False})
 
 
 class ApplicationListView(generics.ListAPIView):
@@ -273,3 +264,21 @@ def get_app_queryset(pk, uid):
         return Application.objects.filter(user_id=uid).filter(pk=pk)
     except Application.DoesNotExist:
         raise Http404
+
+
+class SubmitFormView(APIView):
+    def post(self, request):
+        data = request.data
+        efiling_url = None
+        # transaction_id = "3a5fd96a-f789-11ea-adc1-0242ac120002"
+        # user_id = "B8C48148965D4F3795E12ED8F285305A"
+        # try:
+        #     efiling_url_res = generate_efiling_url(content, data, user_id, transaction_id)
+        #     if efiling_url_res:
+        #         efiling_url = efiling_url_res["efilingUrl"]
+        #         LOGGER.debug("Redirect response %s", efiling_url_res)
+        # except Exception as exception:
+        #     LOGGER.exception("Error! %s", exception)
+        #     raise
+        return Response({"efilingUrl": efiling_url})
+    

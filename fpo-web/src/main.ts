@@ -1,6 +1,6 @@
 import Vue from "vue";
 import App from "@/App.vue";
-import BootstrapVue from "bootstrap-vue";
+import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue';
 import VueRouter from "vue-router";
 import routes from "@/routes";
 import GlobalStore from "@/store";
@@ -15,6 +15,7 @@ import "font-awesome/css/font-awesome.min.css";
 
 Vue.config.productionTip = false;
 Vue.use(BootstrapVue);
+Vue.use(BootstrapVueIcons);
 Vue.use(VueRouter);
 Vue.use(http)
 
@@ -24,6 +25,8 @@ const router = new VueRouter({
     return { x: 0, y: 0 }
    }
 });
+// Redirect to /family-law-act/
+history.pushState({page: "home"}, "", "/family-law-act/")
 
 new Vue({
   router: router,
