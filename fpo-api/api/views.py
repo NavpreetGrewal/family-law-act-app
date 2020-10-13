@@ -22,6 +22,7 @@ from django.utils import timezone
 from rest_framework import status
 import logging
 import json
+import uuid
 from django.http import Http404
 from django.conf import settings
 from api.models.PreparedPdf import PreparedPdf
@@ -29,8 +30,10 @@ import base64
 
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.template.loader import get_template
+from django.core.exceptions import PermissionDenied
 from django.middleware.csrf import get_token
 from api.serializers import ApplicationListSerializer
+from api.efiling import upload_documents, generate_efiling_url
 
 from rest_framework.views import APIView
 from rest_framework.request import Request
@@ -266,19 +269,78 @@ def get_app_queryset(pk, uid):
         raise Http404
 
 
-class SubmitFormView(APIView):
+class UploadDocumentView(APIView):
+
     def post(self, request):
+        docs = request.FILES.getlist('files')
+        submissionId = None
+        files = []
+        if docs:
+            for doc in docs:
+                files.append(('files', (doc.name, doc.read())))
+
+        uid = request.user.id
+        transaction_id = get_transaction(request)
+        print("tras", transaction_id)
+        user_id = get_universal_id(uid)
+        if not user_id:
+            raise PermissionDenied()
+
+        try:
+            upload_res = upload_documents(files, user_id, transaction_id)
+            if upload_res:
+                submissionId = upload_res["submissionId"]
+        except Exception as exception:
+            LOGGER.exception("Error! %s", exception)
+            raise
+        return Response({"submissionId": submissionId})
+
+
+class GenerateUrlView(APIView):
+
+    def post(self, request, submissionId=None):
         data = request.data
+        submission_id = request.query_params.get("submissionId")
+        print("sub", submission_id)
+        if not data:
+            return HttpResponseBadRequest("Missing request body")
+        uid = request.user.id
+        if not uid:
+            return HttpResponseForbidden("Missing user ID")
         efiling_url = None
-        # transaction_id = "3a5fd96a-f789-11ea-adc1-0242ac120002"
-        # user_id = "B8C48148965D4F3795E12ED8F285305A"
-        # try:
-        #     efiling_url_res = generate_efiling_url(content, data, user_id, transaction_id)
-        #     if efiling_url_res:
-        #         efiling_url = efiling_url_res["efilingUrl"]
-        #         LOGGER.debug("Redirect response %s", efiling_url_res)
-        # except Exception as exception:
-        #     LOGGER.exception("Error! %s", exception)
-        #     raise
+        transaction_id = get_transaction(request)
+        print("transactionId", transaction_id)
+        
+        user_id = get_universal_id(uid)
+        print("user_id", user_id)
+        if not user_id:
+            raise PermissionDenied()
+
+        try:
+            efiling_url_res = generate_efiling_url(data, user_id, transaction_id, submission_id)
+            if efiling_url_res:
+                efiling_url = efiling_url_res["efilingUrl"]
+                LOGGER.debug("Redirect response %s", efiling_url_res)
+        except Exception as exception:
+            LOGGER.exception("Error! %s", exception)
+            raise
         return Response({"efilingUrl": efiling_url})
     
+
+def get_transaction(request):
+    """
+    Get the current transaction id stored in session, otherwise generate one.
+    """
+    guid = request.session.get('transaction_id', None)
+    if not guid:
+        guid = str(uuid.uuid4())
+        request.session['transaction_id'] = guid
+    return guid
+
+
+def get_universal_id(uid):
+    try:
+        return User.objects.values_list("universal_id", flat=True).get(pk=uid)     
+    except User.DoesNotExist:
+        LOGGER.debug("No record found")
+        return

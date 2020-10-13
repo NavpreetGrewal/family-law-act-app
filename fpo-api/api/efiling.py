@@ -36,17 +36,21 @@ def get_efiling_auth_token() -> {}:
         return
 
 
-def upload_documents(content: any, user_id: str, transaction_id: str, auth_token: str) -> {}:
+def upload_documents(files: any, user_id: str, transaction_id: str) -> {}:
     base_url = settings.EFILING_BASE_URL
 
     if not base_url:
         LOGGER.error("eFiling base url not configured")
         return
+
+    # Get the keycloak token and check if it's not empty
+    token = get_efiling_auth_token()
+    if not token or 'access_token' not in token:
+        LOGGER.error("No efiling auth token provided %s", token)
+        return
+    auth_token = token['access_token']
+
     url = base_url + "documents"
-    decoded_image = base64.b64decode(content)
-    files = {
-        'files': ('dummy.pdf', BytesIO(decoded_image))
-    }
 
     headers = {"Authorization": 'Bearer ' + auth_token,
                "contect-type": "multipart/form-data",
@@ -55,7 +59,7 @@ def upload_documents(content: any, user_id: str, transaction_id: str, auth_token
     try:
         response = requests.post(url, data={}, headers=headers, files=files, verify=True)
         if not response.status_code // 100 == 2:
-            LOGGER.error("Error: Document upload failed! %s", response)
+            LOGGER.error("Error: Document upload failed! %s", response.text.encode('utf8'))
             return
 
         upload_res = response.json()
@@ -66,14 +70,14 @@ def upload_documents(content: any, user_id: str, transaction_id: str, auth_token
         return
 
 
-def generate_efiling_url(content: any, user_id: str, transaction_id: str) -> {}:
+def generate_efiling_url(data: any, user_id: str, transaction_id: str, submission_id: str) -> {}:
     base_url = settings.EFILING_BASE_URL
 
     if not base_url:
         LOGGER.error("eFiling base url not configured")
         return
-    if not content:
-        LOGGER.error("No file content provided")
+    if not submission_id:
+        LOGGER.error("Submission Id not provided")
         return
     if not user_id:
         LOGGER.error("User Id not provided")
@@ -89,43 +93,12 @@ def generate_efiling_url(content: any, user_id: str, transaction_id: str) -> {}:
         return
     auth_token = token['access_token']
 
-    # Upload the documents and check if submission response is not empty
-    submission_res = upload_documents(content, user_id, transaction_id, auth_token)
-    if not submission_res or 'submissionId' not in submission_res:
-        LOGGER.error("No efiling submissionId provided %s", submission_res)
-        return
-    submission_id = submission_res['submissionId']
-
-    # Make a post request to generateUrl api
     url = base_url + submission_id + "/generateUrl"
     headers = {"Authorization": 'Bearer ' + auth_token,
                "Content-Type": "application/json",
                "X-Transaction-Id": transaction_id,
                "X-User-Id": user_id
                }
-    data = {
-            "navigationUrls": {
-            "success": "http//somewhere.com",
-            "error": "http//somewhere.com",
-            "cancel": "http//somewhere.com"
-            },
-            "clientAppName": "my app",
-            "filingPackage": {
-                "court": {
-                "location": "1211",
-                "level": "P",
-                "courtClass": "F"
-            },
-            "documents": [
-                {
-                "name": "dummy.pdf",
-                "type": "WNC",
-                "description": "Without Notice Application Checklist",
-                "statutoryFeeAmount": 0
-                }
-            ]
-    }
-        }
     try:
         response = requests.post(url, data=json.dumps(data), headers=headers, verify=True)
         if not response.status_code // 100 == 2:

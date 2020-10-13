@@ -61,7 +61,8 @@ urlpatterns = [
     path("app/", views.ApplicationView.as_view()),
     path("survey-print/", views.SurveyPdfView.as_view()),
     path("user-info/", views.UserStatusView.as_view()),
-    path("submit-form/", views.SubmitFormView.as_view()),
+    path("redirect-url/", views.GenerateUrlView.as_view()),
+    path("upload-doc/", views.UploadDocumentView.as_view()),    
 ]
 
 if settings.OIDC_ENABLED:
